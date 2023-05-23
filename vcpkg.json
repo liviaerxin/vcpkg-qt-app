@@ -1,0 +1,14 @@
+{
+  "dependencies": [
+    {
+      "name": "qtbase",
+      "default-features": false,
+      "features": [
+        "gui",
+        "widgets"
+      ]
+    },
+    "qttools",
+    "qtdeclarative"
+  ]
+}
