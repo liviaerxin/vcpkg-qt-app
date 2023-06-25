@@ -7,8 +7,6 @@
         "gui",
         "widgets"
       ]
-    },
-    "qttools",
-    "qtdeclarative"
+    }
   ]
 }

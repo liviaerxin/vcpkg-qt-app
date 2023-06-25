@@ -1,27 +1,6 @@
+include(Helpers.cmake)
+
 cmake_minimum_required(VERSION 3.16)
-
-function(print_target_properties target)
-    if(NOT TARGET ${target})
-        message(STATUS "There is no target named '${target}'")
-        return()
-    endif()
-
-    foreach(property ${CMAKE_PROPERTY_LIST})
-        string(REPLACE "<CONFIG>" "${CMAKE_BUILD_TYPE}" property ${property})
-
-        # Fix https://stackoverflow.com/questions/32197663/how-can-i-remove-the-the-location-property-may-not-be-read-from-target-error-i
-        if(property STREQUAL "LOCATION" OR property MATCHES "^LOCATION_" OR property MATCHES "_LOCATION$")
-            continue()
-        endif()
-
-        get_property(was_set TARGET ${target} PROPERTY ${property} SET)
-
-        if(was_set)
-            get_target_property(value ${target} ${property})
-            message("${target} ${property} = ${value}")
-        endif()
-    endforeach()
-endfunction()
 
 project(helloworld VERSION 1.0.0 LANGUAGES CXX)
 
@@ -81,12 +60,12 @@ elseif(APPLE)
     message("https://cmake.org/cmake/help/latest/variable/APPLE.html?highlight=apple")
     print_target_properties(Qt6::macdeployqt)
 
-    add_custom_command(
-        TARGET ${PROJECT_NAME}
-        POST_BUILD
-        COMMAND Qt6::macdeployqt
-        ARGS $<TARGET_BUNDLE_DIR:${PROJECT_NAME}> # Full path to the bundle directory (my.app, my.framework, or my.bundle) where tgt is the name of a target.
-    )
+    # add_custom_command(
+    #     TARGET ${PROJECT_NAME}
+    #     POST_BUILD
+    #     COMMAND Qt6::macdeployqt
+    #     ARGS $<TARGET_BUNDLE_DIR:${PROJECT_NAME}> # Full path to the bundle directory (my.app, my.framework, or my.bundle) where tgt is the name of a target.
+    # )
 elseif(UNIX)
     message("https://cmake.org/cmake/help/latest/variable/UNIX.html?highlight=unix")
 endif()
@@ -108,10 +87,10 @@ if(WIN32)
 elseif(APPLE)
     # Install the executable into "${CMAKE_INSTALL_PREFIX}".
     set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
-    install(CODE "
-        include(BundleUtilities)
-        fixup_bundle(${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app \"\" \"\")
-    " COMPONENT Runtime)
+    # install(CODE "
+    #     include(BundleUtilities)
+    #     fixup_bundle(${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app \"\" \"\")
+    # " COMPONENT Runtime)
 
 # install(TARGETS ${PROJECT_NAME}
 # BUNDLE DESTINATION .
@@ -142,15 +121,4 @@ message(STATUS, "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}")
 message(STATUS, "CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 message(STATUS, "CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 
-macro(print_all_variables)
-    message(STATUS "print_all_variables------------------------------------------{")
-    get_cmake_property(_variableNames VARIABLES)
-
-    foreach(_variableName ${_variableNames})
-        message(STATUS "${_variableName}=${${_variableName}}")
-    endforeach()
-
-    message(STATUS "print_all_variables------------------------------------------}")
-endmacro()
-
-print_all_variables()
+# print_all_variables()
