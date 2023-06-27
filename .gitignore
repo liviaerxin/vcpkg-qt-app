@@ -1,3 +1,5 @@
 build/
+bin/
+install/
 vcpkg_installed/
 .DS_Store
