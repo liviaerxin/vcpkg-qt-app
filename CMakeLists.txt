@@ -14,7 +14,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # When using `option(), these variables must not be already set as a normal or cache variable
 # Equal to: set(BUILD_SHARED_LIBS ON CACHE BOOL "Build libfoo shared library")
 option(BUILD_SHARED_LIBS "Default BUILD_SHARED_LIBS to ON" ON)
-set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Default CMAKE_BUILD_TYPE to Release")
+
 if(MSVC)
     # Create dlls on Windows
     option(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS "Default CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS to ON" ON)
@@ -24,7 +24,7 @@ if(APPLE)
     option(CMAKE_MACOSX_BUNDLE "Default CMAKE_MACOSX_BUNDLE to ON" ON)
 endif()
 
-# Set default value of `CMAKE_INSTALL_PREFIX` to ${PROJECT_SOURCE_DIR}/install as this is an application-based standalone project.
+# Change `CMAKE_INSTALL_PREFIX` default to `${PROJECT_SOURCE_DIR}/install` as this is an application-based standalone project.
 # NOTE: `option()` will not work here becuase `CMAKE_INSTALL_PREFIX` is already cached into `CMakeCache.txt` before running `option()`!
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
     set(CMAKE_INSTALL_PREFIX ${PROJECT_SOURCE_DIR}/install CACHE PATH "Force path to set CMAKE_INSTALL_PREFIX" FORCE)
@@ -36,9 +36,19 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 find_package(Qt6 REQUIRED COMPONENTS Core)
 qt_standard_project_setup()
 
+# qt_add_executable will do `list(APPEND install_rpath "@executable_path/../Frameworks")` in function `_qt_internal_finalize_macos_app()`
+# qt_add_executable(${PROJECT_NAME}
+#     main.cpp
+# )
 
+# NOTE: When using `add_executable`, it must add `` for running `qt_generate_deploy_app_script()` successfully
 add_executable(${PROJECT_NAME}
     main.cpp
+)
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    # INSTALL_RPATH "@executable_path/../Frameworks"
+    INSTALL_RPATH "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/$<$<CONFIG:Debug>:debug>/lib"
+    INSTALL_RPATH_USE_LINK_PATH ON
 )
 
 target_link_libraries(${PROJECT_NAME} PRIVATE Qt6::Widgets)
@@ -85,13 +95,6 @@ if(WIN32)
 # DIRECTORIES ${QT_BIN_DIR}
 # RUNTIME DESTINATION .)
 elseif(APPLE)
-    set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR})
-
-# install(CODE "
-# include(BundleUtilities)
-# fixup_bundle(${CMAKE_INSTALL_PREFIX}/${PROJECT_NAME}.app \"\" \"\")
-# " COMPONENT Runtime)
-
     install(TARGETS ${PROJECT_NAME}
         BUNDLE DESTINATION .
         RUNTIME DESTINATION ${CMAKE_INSTALL_PREFIX}
@@ -104,15 +107,15 @@ elseif(UNIX)
     )
 endif()
 
-# Generate the deployment script for the target MyApp.
-qt_generate_deploy_app_script(
-    TARGET ${PROJECT_NAME}
-    OUTPUT_SCRIPT deploy_script
-    NO_UNSUPPORTED_PLATFORM_ERROR
-)
+# # Generate the deployment script for the target MyApp.
+# qt_generate_deploy_app_script(
+#     TARGET ${PROJECT_NAME}
+#     OUTPUT_SCRIPT deploy_script
+#     NO_UNSUPPORTED_PLATFORM_ERROR
+# )
 
-# Call the deployment script on "cmake --install".
-install(SCRIPT ${deploy_script})
+# # Call the deployment script on "cmake --install".
+# install(SCRIPT ${deploy_script})
 
 
 message(STATUS "BUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
@@ -125,5 +128,32 @@ message(STATUS "CMAKE_INSTALL_BINDIR=${CMAKE_INSTALL_BINDIR}")
 message(STATUS "CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 message(STATUS "CMAKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}")
 message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
+message(STATUS "CMAKE_BUILD_RPATH=${CMAKE_BUILD_RPATH}")
+message(STATUS "CMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
+
+message(STATUS "CMAKE_SYSTEM_PREFIX_PATH=${CMAKE_SYSTEM_PREFIX_PATH}")
+message(STATUS "CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}")
+
+message(STATUS "CMAKE_SYSTEM_INCLUDE_PATH=${CMAKE_SYSTEM_INCLUDE_PATH}")
+message(STATUS "CMAKE_INCLUDE_PATH=${CMAKE_INCLUDE_PATH}")
+
+message(STATUS "CMAKE_SYSTEM_LIBRARY_PATH=${CMAKE_SYSTEM_LIBRARY_PATH}")
+message(STATUS "CMAKE_LIBRARY_PATH=${CMAKE_LIBRARY_PATH}")
+
+message(STATUS "Qt6_FOUND=${Qt6_FOUND}")
+message(STATUS "Qt6_DIR=${Qt6_DIR}")
+message(STATUS "Qt6_INCLUDE_DIRS=${Qt6_INCLUDE_DIRS}")
+message(STATUS "Qt6_CONFIG=${Qt6_CONFIG}")
+message(STATUS "Qt6_VERSION=${Qt6_VERSION}")
+message(STATUS "Qt6_VERSION_MAJOR=${Qt6_VERSION_MAJOR}")
+message(STATUS "Qt6_VERSION_MINOR=${Qt6_VERSION_MINOR}")
+
+message(STATUS "_VCPKG_INSTALLED_DIR=${_VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib")
+message(STATUS "VCPKG_TARGET_TRIPLET=${VCPKG_TARGET_TRIPLET}")
+message(STATUS "VCPKG_INSTALLED_DIR=${VCPKG_INSTALLED_DIR}")
+message(STATUS "VCPKG_MANIFEST_MODE=${VCPKG_MANIFEST_MODE}")
+message(STATUS "VCPKG_MANIFEST_DIR=${VCPKG_MANIFEST_DIR}")
+message(STATUS "VCPKG_MANIFEST_INSTALL=${VCPKG_MANIFEST_INSTALL}")
+message(STATUS "VCPKG_INSTALLED_DIR=${VCPKG_INSTALLED_DIR}")
 
 # print_all_variables()
